@@ -52,6 +52,9 @@ func (l *Lexer) NextToken() token.Token {
 		tok = newToken(token.LBRACE, l.ch)
 	case '}':
 		tok = newToken(token.RBRACE, l.ch)
+	case 0:
+		tok.Literal = ""
+		tok.Type = token.EOF
 	default:
 		if isLetter(l.ch) {
 			tok.Literal = l.readIdentifier()
@@ -77,15 +80,6 @@ func (l *Lexer) skipWhitespace() {
 	}
 }
 
-// Skip any whitespace
-func (l *Lexer) skipWhitespaceAux() {
-	for _, c := range []byte{' ', '\t', '\n', '\r'} {
-		if l.ch == c {
-			l.readChar()
-		}
-	}
-}
-
 // Read number from input
 func (l *Lexer) readNumber() string {
 	pos := l.position
@@ -97,11 +91,11 @@ func (l *Lexer) readNumber() string {
 
 // Get an identifier from input
 func (l *Lexer) readIdentifier() string {
-	position := l.position
-	if isLetter(l.ch) {
+	pos := l.position
+	for isLetter(l.ch) {
 		l.readChar()
 	}
-	return l.input[position:l.position]
+	return l.input[pos:l.position]
 }
 
 // Create a new token
@@ -113,8 +107,8 @@ func isLetter(ch byte) bool {
 	return ('a' <= ch && ch <= 'z') || ('A' <= ch && ch <= 'Z') || (ch == '_')
 }
 
-// Returns true if we find a digiti
-// TODO:
+// Returns true if we find a digit
 func isDigit(ch byte) bool {
+	return '0' <= ch && ch <= '9'
 
 }
