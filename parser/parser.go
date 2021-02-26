@@ -14,6 +14,18 @@ type (
 	infixParseFn  func(ast.Expression) ast.Expression
 )
 
+// Monkey Language Precedences
+const (
+	_ int = iota
+	LOWEST
+	EQUALS      // ==
+	LESSGREATER //
+	SUM         // +
+	PRODUCT     //*
+	PREFIX      // -X or !X
+	CALL
+)
+
 type Parser struct {
 	l *lexer.Lexer
 
@@ -30,11 +42,19 @@ func NewParser(l *lexer.Lexer) *Parser {
 		l:      l,
 		errors: []string{},
 	}
+
+	p.prefixParseFns = make(map[token.TokenType]prefixParseFn)
+	p.registerPrefix(token.IDENT, p.parseIdentifier)
+
 	// Read two tokens, so curToken and peekToken are both valid
 	p.nextToken()
 	p.nextToken()
 
 	return p
+}
+
+func (p *Parser) parseIdentifier() ast.Expression {
+	return &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
 }
 
 func (p *Parser) nextToken() {
@@ -73,9 +93,35 @@ func (p *Parser) parseStatement() ast.Statement {
 	case token.RETURN:
 		return p.parseReturnStatement()
 	default:
+		// We parse expressions since if not one of the two statements.
+		return p.parseExpressionStatement()
+	}
+
+}
+
+// Parse Expressions
+func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
+	stmt := &ast.ExpressionStatement{Token: p.curToken}
+	// We parse expression with LOWEST since we haven't actually parsed
+	// anything yet. There is no operators to compare for precedence.
+	stmt.Expression = p.parseExpression(LOWEST)
+
+	if p.peekTokenIs(token.SEMICOLON) {
+		p.nextToken()
+	}
+
+	return stmt
+}
+
+// parseExpression prefix function
+func (p *Parser) parseExpression(precedence int) ast.Expression {
+	prefix := p.prefixParseFns[p.curToken.Type]
+	if prefix == nil {
 		return nil
 	}
 
+	leftExp := prefix()
+	return leftExp
 }
 
 // Parse our LET statement
