@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"strconv"
 
 	"gomonkey/ast"
 	"gomonkey/lexer"
@@ -26,6 +27,7 @@ const (
 	CALL
 )
 
+// Parser object
 type Parser struct {
 	l *lexer.Lexer
 
@@ -37,6 +39,7 @@ type Parser struct {
 	infixParseFns  map[token.TokenType]infixParseFn
 }
 
+// Create new parser
 func NewParser(l *lexer.Lexer) *Parser {
 	p := &Parser{
 		l:      l,
@@ -53,10 +56,12 @@ func NewParser(l *lexer.Lexer) *Parser {
 	return p
 }
 
+// parseIdentifier returns an ast.Identifier expression
 func (p *Parser) parseIdentifier() ast.Expression {
 	return &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
 }
 
+// nextToken moves our parser curToken and peekToken
 func (p *Parser) nextToken() {
 	p.curToken = p.peekToken
 	p.peekToken = p.l.NextToken()
@@ -156,6 +161,23 @@ func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 	}
 
 	return stmt
+}
+
+// parseIntegerLiteral will parse integer literals.
+// The Value field will be converted to an int64
+func (p *Parser) parseIntegerLiteral() ast.Expression {
+	lit := &ast.IntegerLiteral{Token: p.curToken}
+
+	value, err := strconv.ParseInt(p.curToken.Literal, 0, 64)
+	if err != nil {
+		msg := fmt.Sprintf("could not parse %q as integer", p.curToken.Literal)
+		p.errors = append(p.errors, msg)
+		return nil
+	}
+
+	lit.Value = value
+	return lit
+
 }
 
 // Check if the current token is of the type we want
