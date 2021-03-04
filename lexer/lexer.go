@@ -5,26 +5,16 @@ import "gomonkey/token"
 type Lexer struct {
 	input        string // String containing what we would like to lex.
 	position     int    // current position in input (point to current character)
-	readPosition int    // current reading position in input (after current char)
-	ch           byte   // current char
+	readPosition int    // points to character directly after the current character.
+	ch           byte   // current character.
 }
 
 // Create new Lexer
 func NewLexer(input string) *Lexer {
 	lex := &Lexer{input: input}
+	// Start us on the first character
 	lex.readChar()
 	return lex
-}
-
-// Get next character from input and advance position.
-func (l *Lexer) readChar() {
-	if l.readPosition >= len(l.input) {
-		l.ch = 0
-	} else {
-		l.ch = l.input[l.readPosition]
-	}
-	l.position = l.readPosition
-	l.readPosition += 1
 }
 
 // Returns next token from out input.
@@ -101,6 +91,18 @@ func (l *Lexer) NextToken() token.Token {
 	return tok
 }
 
+// readChar will get next character from input and advance position field
+// to point to the subsequent character of our input string.
+func (l *Lexer) readChar() {
+	if l.readPosition >= len(l.input) {
+		l.ch = 0
+	} else {
+		l.ch = l.input[l.readPosition]
+	}
+	l.position = l.readPosition
+	l.readPosition += 1
+}
+
 // Skip over any whitespace
 func (l *Lexer) skipWhitespace() {
 	for l.ch == ' ' || l.ch == '\t' || l.ch == '\n' || l.ch == '\r' {
@@ -147,5 +149,4 @@ func isLetter(ch byte) bool {
 // Returns true if we find a digit
 func isDigit(ch byte) bool {
 	return '0' <= ch && ch <= '9'
-
 }
