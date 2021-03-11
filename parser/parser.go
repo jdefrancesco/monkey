@@ -142,6 +142,7 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 	}
 	leftExp := prefix()
 
+	// precedence is our RBP and p.peekPrecedence() is our LBP
 	for !p.peekTokenIs(token.SEMICOLON) && precedence < p.peekPrecedence() {
 		infix := p.infixParseFns[p.peekToken.Type]
 		if infix == nil {
@@ -242,11 +243,12 @@ func (p *Parser) parseIntegerLiteral() ast.Expression {
 
 }
 
-// Check if the current token is of the type we want
+// curTokenIs will check current token type is the type we supply as an argument.
 func (p *Parser) curTokenIs(t token.TokenType) bool {
 	return p.curToken.Type == t
 }
 
+// peekTokenIs checks if a supplied token is of a specific type.
 func (p *Parser) peekTokenIs(t token.TokenType) bool {
 	return p.peekToken.Type == t
 }
@@ -261,6 +263,7 @@ func (p *Parser) expectPeek(t token.TokenType) bool {
 	}
 }
 
+// Errors will return slice of error strings
 func (p *Parser) Errors() []string {
 	return p.errors
 }
