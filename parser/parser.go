@@ -116,9 +116,9 @@ func (p *Parser) parseStatement() ast.Statement {
 
 // Parse Expressions
 func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
+	defer untrace(trace("parseExpressionStatement", p))
+
 	stmt := &ast.ExpressionStatement{Token: p.curToken}
-	// We parse expression with LOWEST since we haven't actually parsed
-	// anything yet. There is no operators to compare for precedence.
 	stmt.Expression = p.parseExpression(LOWEST)
 
 	if p.peekTokenIs(token.SEMICOLON) {
@@ -135,6 +135,8 @@ func (p *Parser) parseIdentifier() ast.Expression {
 
 // parseExpression is the heart of out Pratt Parser
 func (p *Parser) parseExpression(precedence int) ast.Expression {
+	defer untrace(trace("parseExpression", p))
+
 	prefix := p.prefixParseFns[p.curToken.Type]
 	if prefix == nil {
 		p.noPrefixParseFnError(p.curToken.Type)
@@ -158,6 +160,8 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 // parsePrefixExpression parses all expressions that look like:
 // <operator> <operand>. Ex: !true
 func (p *Parser) parsePrefixExpression() ast.Expression {
+	defer untrace(trace("parsePrefixExpression", p))
+
 	expression := &ast.PrefixExpression{
 		Token:    p.curToken,
 		Operator: p.curToken.Literal,
@@ -172,6 +176,8 @@ func (p *Parser) parsePrefixExpression() ast.Expression {
 // parseInfixExpression parses all expressions of for <operand> <operator> <operand>.
 // For example it might parse an expression like 4 + 4.
 func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
+	defer untrace(trace("parseInfixExpression", p))
+
 	expression := &ast.InfixExpression{
 		Token:    p.curToken,
 		Operator: p.curToken.Literal,
@@ -180,7 +186,12 @@ func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 
 	precedence := p.curPrecedence()
 	p.nextToken()
+
+	// if expression.Operator == "+" {
+	// expression.Right = p.parseExpression(precedence - 1)
+	// } else {
 	expression.Right = p.parseExpression(precedence)
+	// }
 
 	return expression
 }
@@ -229,6 +240,8 @@ func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 // parseIntegerLiteral will parse integer literals.
 // The Value field will be converted to an int64
 func (p *Parser) parseIntegerLiteral() ast.Expression {
+	defer untrace(trace("parseIntegerLiteral", p))
+
 	lit := &ast.IntegerLiteral{Token: p.curToken}
 
 	value, err := strconv.ParseInt(p.curToken.Literal, 0, 64)
