@@ -66,6 +66,7 @@ func NewParser(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.MINUS, p.parsePrefixExpression)
 	p.registerPrefix(token.TRUE, p.parseBoolean)
 	p.registerPrefix(token.FALSE, p.parseBoolean)
+	p.registerPrefix(token.LPAREN, p.parseGroupedExpression)
 
 	// Infix parse expression table
 	// Each token has the same expression parsing function attached
@@ -84,6 +85,19 @@ func NewParser(l *lexer.Lexer) *Parser {
 	p.nextToken()
 
 	return p
+}
+
+// Make sure grouped expressions are parsed with correct precedence forced by parenthesis.
+func (p *Parser) parseGroupedExpression() ast.Expression {
+
+	p.nextToken()
+
+	exp := p.parseExpression(LOWEST)
+	if !p.expectPeek(token.RPAREN) {
+		return nil
+	}
+
+	return exp
 }
 
 // ParseProgram kicks off our parser.
