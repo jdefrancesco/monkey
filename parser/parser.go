@@ -151,7 +151,7 @@ func (p *Parser) parseIdentifier() ast.Expression {
 
 // parseExpression is the heart of out Pratt Parser
 func (p *Parser) parseExpression(precedence int) ast.Expression {
-	defer untrace(trace("parseExpression", p))
+	// defer untrace(trace("parseExpression", p))
 
 	prefix := p.prefixParseFns[p.curToken.Type]
 	if prefix == nil {
@@ -176,7 +176,7 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 // parseIntegerLiteral will parse integer literals.
 // The Value field will be converted to an int64
 func (p *Parser) parseIntegerLiteral() ast.Expression {
-	defer untrace(trace("parseIntegerLiteral", p))
+	// defer untrace(trace("parseIntegerLiteral", p))
 
 	lit := &ast.IntegerLiteral{Token: p.curToken}
 
@@ -195,7 +195,7 @@ func (p *Parser) parseIntegerLiteral() ast.Expression {
 // parsePrefixExpression parses all expressions that look like:
 // <operator> <operand>. Ex: !true
 func (p *Parser) parsePrefixExpression() ast.Expression {
-	defer untrace(trace("parsePrefixExpression", p))
+	// defer untrace(trace("parsePrefixExpression", p))
 
 	expression := &ast.PrefixExpression{
 		Token:    p.curToken,
@@ -211,7 +211,7 @@ func (p *Parser) parsePrefixExpression() ast.Expression {
 // parseInfixExpression parses all expressions of for <operand> <operator> <operand>.
 // For example it might parse an expression like 4 + 4.
 func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
-	defer untrace(trace("parseInfixExpression", p))
+	// defer untrace(trace("parseInfixExpression", p))
 
 	expression := &ast.InfixExpression{
 		Token:    p.curToken,
