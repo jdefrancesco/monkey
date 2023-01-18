@@ -132,7 +132,7 @@ func (p *Parser) parseStatement() ast.Statement {
 
 // Parse Expressions
 func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
-	defer untrace(trace("parseExpressionStatement", p))
+	// defer untrace(trace("parseExpressionStatement", p))
 
 	stmt := &ast.ExpressionStatement{Token: p.curToken}
 	stmt.Expression = p.parseExpression(LOWEST)
