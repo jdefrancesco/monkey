@@ -19,7 +19,7 @@ type (
 const (
 	_ int = iota
 	LOWEST
-	EQUALS      // ==
+	EQUALS      //
 	LESSGREATER //
 	SUM         // +
 	PRODUCT     //*
