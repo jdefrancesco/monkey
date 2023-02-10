@@ -52,7 +52,7 @@ func testEval(input string) object.Object {
 func testIntegerObject(t *testing.T, obj object.Object, expected int64) bool {
 	result, ok := obj.(*object.Integer)
 	if !ok {
-		t.Errorf("object is not an integer. got=%T (%+v)", obj, obj)
+		t.Errorf("object is not an integer. got=%+v)", obj)
 		return false
 	}
 
@@ -130,4 +130,61 @@ func TestBangOperator(t *testing.T) {
 		evaluated := testEval(tt.input)
 		testBooleanObject(t, evaluated, tt.expected)
 	}
+}
+
+// func TestIfElseExpressions(t *testing.T) {
+// 	tests := []struct {
+// 		input    string
+// 		expected interface{}
+// 	}{
+// 		{"if (true) { 10 }", 10},
+// 		{"if (false) { 10 }", nil},
+// 		{"if (1) { 10 }", 10},
+// 		{"if (1 < 2) { 10 }", 10},
+// 		{"if (1 > 2) { 10 }", nil},
+// 		{"if (1 > 2) { 10 } else { 20 }", 20},
+// 		{"if (1 < 2) { 10 } else { 20 }", 10},
+// 	}
+
+// 	for _, tt := range tests {
+// 		evaluated := testEval(tt.input)
+// 		if i, ok := tt.expected.(int); ok {
+// 			testIntegerObject(t, evaluated, int64(i))
+// 		} else {
+// 			testNullObject(t, evaluated)
+// 		}
+// 	}
+// }
+
+func TestIfExpression(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected interface{}
+	}{
+		{"if (true) { 10 }", 10},
+		{"if (false) { 10 }", nil},
+		{"if (1) { 10 }", 10},
+		{"if (1 < 2) { 10 }", 10},
+		{"if (1 > 2) { 10 }", nil},
+		{"if (1 < 2) { 10 } else { 20 }", 10},
+		{"if (1 > 2) { 10 } else { 20 }", 20},
+	}
+
+	for _, tt := range tests {
+
+		evaluated := testEval(tt.input)
+		if i, ok := tt.expected.(int); ok {
+			testIntegerObject(t, evaluated, int64(i))
+		} else {
+			testNullObject(t, evaluated)
+		}
+	}
+}
+
+func testNullObject(t *testing.T, obj object.Object) bool {
+	if obj != NULL {
+		t.Errorf("object is not NULL. got=(%#v)", obj)
+		return false
+	}
+	return true
 }
