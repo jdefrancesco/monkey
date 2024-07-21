@@ -71,7 +71,6 @@ func evalBlockStatement(block *ast.BlockStatement) object.Object {
 
 	for _, statement := range block.Statements {
 		result = Eval(statement)
-		fmt.Printf("Evaluating block statement: %v\n", result)
 
 		if result != nil {
 			if result.Type() == object.RETURN_VALUE_OBJ {
@@ -151,15 +150,12 @@ func nativeBoolToBooleanObject(input bool) *object.Boolean {
 
 func evalIfExpression(ie *ast.IfExpression) object.Object {
 	condition := Eval(ie.Condition)
-	fmt.Printf("Evaluating if condition: %v\n", condition)
 
 	if isTruthy(condition) {
 		consequence := Eval(ie.Consequence)
-		fmt.Printf("Evaluating consequence: %v\n", consequence)
 		return consequence
 	} else if ie.Alternative != nil {
 		alternative := Eval(ie.Alternative)
-		fmt.Printf("Evaluating alternative: %v\n", alternative)
 		return alternative
 	}
 	return NULL
@@ -183,11 +179,9 @@ func evalProgram(program *ast.Program) object.Object {
 
 	for _, statement := range program.Statements {
 		result = Eval(statement)
-		fmt.Printf("Evaluating program statement: %v\n", result)
 
 		if result != nil {
 			if returnValue, ok := result.(*object.ReturnValue); ok {
-				fmt.Printf("Unwrapping return value: %v\n", returnValue.Value)
 				return returnValue.Value
 			}
 		}
