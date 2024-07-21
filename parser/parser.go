@@ -68,6 +68,7 @@ func NewParser(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.FALSE, p.parseBoolean)
 	p.registerPrefix(token.LPAREN, p.parseGroupedExpression)
 	p.registerPrefix(token.IF, p.parseIfExpression)
+
 	// Infix parse expression table
 	// Each token has the same expression parsing function attached
 	p.infixParseFns = make(map[token.TokenType]infixParseFn)
@@ -132,8 +133,6 @@ func (p *Parser) parseStatement() ast.Statement {
 
 // Parse Expressions
 func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
-	// defer untrace(trace("parseExpressionStatement", p))
-
 	stmt := &ast.ExpressionStatement{Token: p.curToken}
 	stmt.Expression = p.parseExpression(LOWEST)
 
@@ -149,10 +148,8 @@ func (p *Parser) parseIdentifier() ast.Expression {
 	return &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
 }
 
-// parseExpression is the heart of out Pratt Parser
+// parseExpression is the heart of our Pratt Parser
 func (p *Parser) parseExpression(precedence int) ast.Expression {
-	// defer untrace(trace("parseExpression", p))
-
 	prefix := p.prefixParseFns[p.curToken.Type]
 	if prefix == nil {
 		p.noPrefixParseFnError(p.curToken.Type)
@@ -160,7 +157,6 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 	}
 	leftExp := prefix()
 
-	// precedence is our RBP and p.peekPrecedence() is our LBP
 	for !p.peekTokenIs(token.SEMICOLON) && precedence < p.peekPrecedence() {
 		infix := p.infixParseFns[p.peekToken.Type]
 		if infix == nil {
@@ -176,8 +172,6 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 // parseIntegerLiteral will parse integer literals.
 // The Value field will be converted to an int64
 func (p *Parser) parseIntegerLiteral() ast.Expression {
-	// defer untrace(trace("parseIntegerLiteral", p))
-
 	lit := &ast.IntegerLiteral{Token: p.curToken}
 
 	value, err := strconv.ParseInt(p.curToken.Literal, 0, 64)
@@ -189,14 +183,11 @@ func (p *Parser) parseIntegerLiteral() ast.Expression {
 
 	lit.Value = value
 	return lit
-
 }
 
 // parsePrefixExpression parses all expressions that look like:
 // <operator> <operand>. Ex: !true
 func (p *Parser) parsePrefixExpression() ast.Expression {
-	// defer untrace(trace("parsePrefixExpression", p))
-
 	expression := &ast.PrefixExpression{
 		Token:    p.curToken,
 		Operator: p.curToken.Literal,
@@ -211,8 +202,6 @@ func (p *Parser) parsePrefixExpression() ast.Expression {
 // parseInfixExpression parses all expressions of for <operand> <operator> <operand>.
 // For example it might parse an expression like 4 + 4.
 func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
-	// defer untrace(trace("parseInfixExpression", p))
-
 	expression := &ast.InfixExpression{
 		Token:    p.curToken,
 		Operator: p.curToken.Literal,
@@ -222,11 +211,7 @@ func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 	precedence := p.curPrecedence()
 	p.nextToken()
 
-	// if expression.Operator == "+" {
-	// expression.Right = p.parseExpression(precedence - 1)
-	// } else {
 	expression.Right = p.parseExpression(precedence)
-	// }
 
 	return expression
 }
@@ -251,8 +236,10 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 		return nil
 	}
 
-	// TODO: Skip expression until we encounter a semicolon.
-	for !p.curTokenIs(token.SEMICOLON) {
+	p.nextToken()
+	stmt.Value = p.parseExpression(LOWEST)
+
+	if p.peekTokenIs(token.SEMICOLON) {
 		p.nextToken()
 	}
 
@@ -264,8 +251,9 @@ func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 	stmt := &ast.ReturnStatement{Token: p.curToken}
 	p.nextToken()
 
-	// TODO
-	for !p.curTokenIs(token.SEMICOLON) {
+	stmt.ReturnValue = p.parseExpression(LOWEST)
+
+	if p.peekTokenIs(token.SEMICOLON) {
 		p.nextToken()
 	}
 

@@ -4,6 +4,7 @@ import (
 	"gomonkey/lexer"
 	"gomonkey/object"
 	"gomonkey/parser"
+	"strings"
 	"testing"
 )
 
@@ -32,19 +33,20 @@ func TestEvalIntegerExpression(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		evaluated := testEval(tt.input)
+		evaluated := testEval(t, tt.input)
 		testIntegerObject(t, evaluated, tt.expected)
 	}
 
 }
 
-func testEval(input string) object.Object {
+func testEval(t *testing.T, input string) object.Object {
 	l := lexer.NewLexer(input)
 	p := parser.NewParser(l)
-
-	// Get our AST
 	program := p.ParseProgram()
 
+	if len(p.Errors()) > 0 {
+		t.Fatalf("input %q has errors: \n%v", input, strings.Join(p.Errors(), "\n"))
+	}
 	// Walk our AST
 	return Eval(program)
 }
@@ -92,7 +94,7 @@ func TestEvalBooleanExpression(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		evaluated := testEval(tt.input)
+		evaluated := testEval(t, tt.input)
 		testBooleanObject(t, evaluated, tt.expected)
 	}
 }
@@ -127,34 +129,34 @@ func TestBangOperator(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		evaluated := testEval(tt.input)
+		evaluated := testEval(t, tt.input)
 		testBooleanObject(t, evaluated, tt.expected)
 	}
 }
 
-// func TestIfElseExpressions(t *testing.T) {
-// 	tests := []struct {
-// 		input    string
-// 		expected interface{}
-// 	}{
-// 		{"if (true) { 10 }", 10},
-// 		{"if (false) { 10 }", nil},
-// 		{"if (1) { 10 }", 10},
-// 		{"if (1 < 2) { 10 }", 10},
-// 		{"if (1 > 2) { 10 }", nil},
-// 		{"if (1 > 2) { 10 } else { 20 }", 20},
-// 		{"if (1 < 2) { 10 } else { 20 }", 10},
-// 	}
+func TestIfElseExpressions(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected interface{}
+	}{
+		{"if (true) { 10 }", 10},
+		{"if (false) { 10 }", nil},
+		{"if (1) { 10 }", 10},
+		{"if (1 < 2) { 10 }", 10},
+		{"if (1 > 2) { 10 }", nil},
+		{"if (1 > 2) { 10 } else { 20 }", 20},
+		{"if (1 < 2) { 10 } else { 20 }", 10},
+	}
 
-// 	for _, tt := range tests {
-// 		evaluated := testEval(tt.input)
-// 		if i, ok := tt.expected.(int); ok {
-// 			testIntegerObject(t, evaluated, int64(i))
-// 		} else {
-// 			testNullObject(t, evaluated)
-// 		}
-// 	}
-// }
+	for _, tt := range tests {
+		evaluated := testEval(t, tt.input)
+		if i, ok := tt.expected.(int); ok {
+			testIntegerObject(t, evaluated, int64(i))
+		} else {
+			testNullObject(t, evaluated)
+		}
+	}
+}
 
 func TestIfExpression(t *testing.T) {
 	tests := []struct {
@@ -172,7 +174,7 @@ func TestIfExpression(t *testing.T) {
 
 	for _, tt := range tests {
 
-		evaluated := testEval(tt.input)
+		evaluated := testEval(t, tt.input)
 		if i, ok := tt.expected.(int); ok {
 			testIntegerObject(t, evaluated, int64(i))
 		} else {
@@ -197,19 +199,11 @@ func TestReturnStatements(t *testing.T) {
 		{"return 10;", 10},
 		{"return 10; 9;", 10},
 		{"return 2*5; 9;", 10},
-		{"9; return 2*5;9;", 10},
+		{"9; return 2*5;11;", 10},
 	}
 
-	t = `
-	if (10 > 1) { 
-		if (10 > 1) {
-			reutrrn 10;
-		}
-		return 1;
-	}`
-
 	for _, tt := range tests {
-		evaluated := testEval(tt.input)
+		evaluated := testEval(t, tt.input)
 		testIntegerObject(t, evaluated, tt.expected)
 	}
 }

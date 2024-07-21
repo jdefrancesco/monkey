@@ -43,4 +43,4 @@ type ReturnValue struct {
 }
 
 func (rv *ReturnValue) Type() ObjectType { return RETURN_VALUE_OBJ }
-func (rv *ReturnValue) Inspeact() string { return rv.Value.Inspect() }
+func (rv *ReturnValue) Inspect() string  { return rv.Value.Inspect() }

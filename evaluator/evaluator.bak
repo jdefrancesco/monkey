@@ -1,11 +1,12 @@
 package evaluator
 
 import (
-	"fmt"
 	"gomonkey/ast"
 	"gomonkey/object"
 )
 
+// Only ever two boolean types, true and false. We don't need more then two objects
+// to represent them. That would be a waste.
 var (
 	TRUE  = &object.Boolean{Value: true}
 	FALSE = &object.Boolean{Value: false}
@@ -13,44 +14,42 @@ var (
 )
 
 func Eval(node ast.Node) object.Object {
-	if node == nil {
-		fmt.Println("Eval received a nil node")
-		return NULL
-	}
 
 	switch node := node.(type) {
 	// Statements
 	case *ast.Program:
 		return evalProgram(node)
+
 	case *ast.ExpressionStatement:
 		return Eval(node.Expression)
+
 	case *ast.BlockStatement:
 		return evalBlockStatement(node)
+
 	case *ast.IfExpression:
 		return evalIfExpression(node)
+
 	case *ast.InfixExpression:
 		left := Eval(node.Left)
 		right := Eval(node.Right)
 		return evalInfixExpression(node.Operator, left, right)
+
 	case *ast.IntegerLiteral:
 		return &object.Integer{Value: node.Value}
+
 	case *ast.Boolean:
 		return nativeBoolToBooleanObject(node.Value)
+
 	case *ast.PrefixExpression:
 		right := Eval(node.Right)
 		return evalPrefixExpression(node.Operator, right)
+
 	case *ast.ReturnStatement:
 		val := Eval(node.ReturnValue)
-		fmt.Printf("Evaluating return statement: %v\n", val)
-		if val == nil {
-			fmt.Println("Return value evaluated to nil")
-			return NULL
-		}
 		return &object.ReturnValue{Value: val}
-	default:
-		fmt.Printf("Unknown node type: %T\n", node)
 	}
-	return NULL
+
+	return nil
 }
 
 func evalInfixExpression(operator string, left, right object.Object) object.Object {
@@ -64,23 +63,7 @@ func evalInfixExpression(operator string, left, right object.Object) object.Obje
 	default:
 		return NULL
 	}
-}
 
-func evalBlockStatement(block *ast.BlockStatement) object.Object {
-	var result object.Object
-
-	for _, statement := range block.Statements {
-		result = Eval(statement)
-		fmt.Printf("Evaluating block statement: %v\n", result)
-
-		if result != nil {
-			if result.Type() == object.RETURN_VALUE_OBJ {
-				return result
-			}
-		}
-	}
-
-	return result
 }
 
 func evalIntegerInfixExpression(operator string, left, right object.Object) object.Object {
@@ -96,6 +79,7 @@ func evalIntegerInfixExpression(operator string, left, right object.Object) obje
 		return &object.Integer{Value: leftVal * rightVal}
 	case "/":
 		return &object.Integer{Value: leftVal / rightVal}
+	// Boolean ops
 	case "<":
 		return nativeBoolToBooleanObject(leftVal < rightVal)
 	case ">":
@@ -118,9 +102,11 @@ func evalPrefixExpression(operator string, right object.Object) object.Object {
 	default:
 		return NULL
 	}
+
 }
 
 func evalBangOperatorExpression(right object.Object) object.Object {
+
 	switch right {
 	case TRUE:
 		return FALSE
@@ -151,16 +137,11 @@ func nativeBoolToBooleanObject(input bool) *object.Boolean {
 
 func evalIfExpression(ie *ast.IfExpression) object.Object {
 	condition := Eval(ie.Condition)
-	fmt.Printf("Evaluating if condition: %v\n", condition)
 
 	if isTruthy(condition) {
-		consequence := Eval(ie.Consequence)
-		fmt.Printf("Evaluating consequence: %v\n", consequence)
-		return consequence
+		return Eval(ie.Consequence)
 	} else if ie.Alternative != nil {
-		alternative := Eval(ie.Alternative)
-		fmt.Printf("Evaluating alternative: %v\n", alternative)
-		return alternative
+		return Eval(ie.Alternative)
 	}
 	return NULL
 }
@@ -183,12 +164,27 @@ func evalProgram(program *ast.Program) object.Object {
 
 	for _, statement := range program.Statements {
 		result = Eval(statement)
-		fmt.Printf("Evaluating program statement: %v\n", result)
 
 		if result != nil {
 			if returnValue, ok := result.(*object.ReturnValue); ok {
-				fmt.Printf("Unwrapping return value: %v\n", returnValue.Value)
 				return returnValue.Value
+			}
+		}
+	}
+
+	return result
+}
+
+func evalBlockStatement(block *ast.BlockStatement) object.Object {
+	var result object.Object
+
+	for _, statement := range block.Statements {
+		result = Eval(statement)
+
+		if result != nil {
+			rt := result.Type()
+			if rt == object.RETURN_VALUE_OBJ {
+				return result
 			}
 		}
 	}
